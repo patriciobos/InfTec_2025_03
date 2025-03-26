@@ -1,0 +1,198 @@
+\section{INTRODUCCIÓN}
+
+%\subsection{Objetivo}
+
+El objetivo de este informe técnico es documentar el diseño e implementación de un módulo de software para configurar y controlar una placa de audio Behringer UMC204HD.  Este dispositivo forma parte del equipamiento e instrumental de la Estación Autónoma Marítima para el Monitoreo de Ruido Ambiente (EAMMRA) que se desarrolla en la División Acústica Submarina de la Dirección de Investigación de la Armada (DIIV). 
+
+La estación EAMMRA es una boya de superficie de diseño específico para la medición de Ruido Ambiente submarino cuya concepción, diseño y fabricación se encuentran documentados en respectivos informes técnicos \citep{EAMMRA_ingConceptual}, \citep{EAMMRA_diseno} y \citep{EAMMRA_subsistemas}.  
+
+El control de la estación en general, y la interacción con la placa en particular, se realizan con una computadora de grado industrial Kaise KBOX-S J6412. Esta computadora pertenece a la categoría de \textit{fanless embedded systems}, que son sistemas de misión específica sin partes móviles y es especialmente adecuada para aplicaciones de funcionamiento autónomo.  Cuenta con un procesador Intel Celeron J6412 de cuatro núcleos y memoria DDR4 de 16 GB \citep{kaise}, lo que le otorga al sistema una razonable capacidad de cómputo para el bajo consumo de energía que requiere la aplicación. En la figura \ref{fig:kaise} se muestra una vista frontal y trasera de la computadora y se pueden observarlas interfaces y conectores disponibles.
+ 
+\begin{figure}[htpb]
+    \centering
+    \includegraphics[width=.44\textwidth]{graficos/kaise.png}
+    \caption{Vista frontal y trasera de la computadora Kaise KBOX-S J6412.}
+    \label{fig:kaise}
+\end{figure}
+
+
+La computadora de EAMMRA corre un sistema operativo de propósitos generales, Ubuntu Server 22.04 LTS. Ubuntu Server es una distribución libre y gratuita de GNU/Linux que no requiere la compra de licencias para su uso. Este sistema operativo es reconocido por su estabilidad y seguridad, atributos esenciales para aplicaciones críticas en sistemas desatendidos como EAMMRA. Por diseño, Ubuntu Server permite una extensa personalización, con la posibilidad de realizar una instalación con los mínimos componentes necesarios, lo que permite optimizar el rendimiento general del sistema.
+
+El módulo de software para configurar y controlar la placa de audio se implementa en Python, un lenguaje de programación interpretado y multiparadigma de alto nivel que viene integrado por defecto en las distribuciones de Ubuntu. En particular, para este módulo se utiliza Python3 que es la versión del lenguaje recomendada para proyectos nuevos, que no requieren retrocompatibilidad con componentes previos que hayan sido desarrollados en Python2.
+
+
+\subsection{Herramientas de desarrollo}
+
+Las herramientas de desarrollo de software que se utilizaron para la implementación del módulo de configuración y control permiten mejorar la calidad del código. Se entiende como código de calidad, aquel que hace lo que se supone que debe hacer, no contienen defectos ni problemas y es fácil de extender con nuevas características.
+
+Las guías de estilo en general se utilizan para definir una forma consistente de escribir código. Si bien el estilo de codificación puede parecer una cuestión de forma, que no afecta el funcionamiento lógico del código, algunas decisiones de estilo pueden evitar errores lógicos frecuentes. Las guías definen convenciones que ayudan a mantener el código fácil de leer, mantener y extender.
+
+Se emplearon herramientas específicas para lenguaje Python, que tienen gran difusión y aceptación en la comunidad de desarrolladores conocidas como \textit{linters}.  Estas herramientas permiten analizar el código y verificar el cumplimiento de un conjunto de reglas de mejores prácticas y buscan problemas, tanto de no conformidad con un estilo como errores de lógica.  Los defectos de lógica que se buscan son errores de código, código con resultados potencialmente no deseado y patrones de código peligroso. El uso de estas herramientas mejora la legibilidad, la mantenibilidad y la escalabilidad y hace que el código sea menos propenso a errores.   
+
+
+\subsubsection{Guías de estilo para código Python - PEP-8 y PEP-257}
+
+Para la escritura del código Python del módulo de configuración y control se adopta la guía de estilo \textit{Python Enhancement Proposal} 8 (PEP-8). Su objetivo principal es mejorar la legibilidad y coherencia del código Python y tiene amplia aceptación dentro de la comunidad de desarrolladores de este lenguaje. La guía fue escrita en 2001 por Guido van Rossum, Barry Warsaw y Nick Coghlan, basándose en las mejores prácticas existentes y las recomendaciones de la comunidad \citep{pep8}. Esta guía fomenta buenas prácticas y técnicas que pueden ayudar a evitar errores comunes.
+
+La guía cubre varios aspectos de la codificación, que incluyen:
+
+\begin{itemize}
+	\item Formato del código: indentación, uso de espacios en blanco, longitud de las líneas, etc.
+	\item Convenciones de nomenclatura: cómo nombrar variables, funciones, clases, módulos, etc.
+	\item Principios de codificación: recomendaciones sobre cómo escribir expresiones y declaraciones de manera clara.
+	\item Comentarios: cuándo y cómo usar comentarios para mejorar la legibilidad del código.
+\end{itemize}
+
+Asimismo, se utiliza la convención \textit{Python Enhancement Proposal} 257, (PEP-257).  Esta convención define el formato y estilo para la documentación, también llamada \textit{Python's docstrings} que aplica a módulos, clases, funciones y métodos \citep{pep257}.  Adicionalmente, si los \textit{docstring} se escriben en forma consistente, exiten herramientas capaces de generar documentación directamente del código.  Esto permite mantener más fácilmente la documentación actualizada dentro del mismo código.
+
+Existen herramientas de desarrollo como pycodestyle y pydocstyle que verifican el estilo y ayudan a asegurar que el código cumpla con las convenciones de PEP-8 y PEP-257, respectivamente.  Estas herramientas pertenecen a la categoría de linters de estilo y en algunos casos vienen integrados dentro de otros linters como Flake8 o Pylama.
+
+\subsubsection{Style guide enforcement - Flake8}
+
+Flake8 es una herramienta que permite imponer y hacer cumplir las directivas de la guía de estilo PEP-8 y pertenece a la familia de programas tipo \textit{lint} que trabajan analizando el código fuente para verificar el cumplimiento de un conjunto definido de reglas. Esta herramienta puede señalar errores de programación, \textit{bugs}, errores de estilo y construcciones sospechosas. Es altamente configurable, y permite a los desarrolladores ajustar las reglas y la severidad de las advertencias según las necesidades específicas de su proyecto \citep{flake8}.
+
+Para instalar flake8 para la versión por defecto de Python:
+
+\begin{lstlisting}[language=bash]
+python -m pip install flake8
+\end{lstlisting}
+
+Para utilizar flake8, se deben ejecutar los siguientes comando desde una terminal interactiva:
+
+\begin{lstlisting}[language=bash]
+flake8 path/to/code/to/check.py
+# or
+flake8 path/to/code/
+\end{lstlisting}
+
+%\clearpage
+
+A su vez, se puede seleccionar una regla específica para ejecutar o ignorar:
+
+\begin{lstlisting}[language={python}]
+flake8 --select E123,W503 path/to/code/
+# or
+flake8 --extend-ignore E203,W234 path/to/code/
+\end{lstlisting}
+
+El listado completo de códigos de error y su significado puede encontrarse en el sitio weboficial de la herramienta, \url{http://flake8.pycqa.org/en/latest/user/error-codes.html}.
+
+\subsubsection{Analizador estático - Pylint}
+Pylint es una herramienta de análisis estático de código para Python que busca errores de programación, ayuda a hacer cumplir un estándar de codificación y busca ``malos olores'' en el código (\textit{code smells}). Utiliza diferentes técnicas para analizar el código fuente y puede identificar problemas o patrones de codificación problemáticos que podrían llevar a errores o a un código difícil de mantener o leer \citep{pylint}. 
+
+Las características principales de Pylint incluyen:
+
+\begin{itemize}
+    \item Chequeo de errores: puede detectar errores que podrían hacer que el código falle en tiempo de ejecución, como llamadas a funciones no definidas, uso de variables antes de su definición, etc.
+    \item Estándares de codificación: Pylint puede asegurar de que el código siga un estándar de codificación particular, como PEP-8.
+    \item Refactorización de código: sugiere lugares donde el código podría ser refactorizado para mejorar la legibilidad o la eficiencia.
+    \item Detección de código duplicado: puede identificar bloques de código duplicados que podrían ser simplificados o extraídos en una función común.
+    \item Chequeo de tipos: aunque Python es un lenguaje dinámicamente tipado, Pylint puede realizar algunas comprobaciones de tipos para identificar posibles problemas.
+\end{itemize}
+
+Para instalar pylint para la versión por defecto de Python:
+
+\begin{lstlisting}[language=bash]
+python -m pip install pylint
+\end{lstlisting}
+
+Para utilizar pylint, se debe ejecutar el siguiente comando:
+
+\begin{lstlisting}[language=bash]
+pylint [options] modules_or_packages
+\end{lstlisting}
+
+%\begingroup %inexplicablemente esto hace que la url fittee bien 
+%\sloppy
+%
+%\endgroup
+
+Pylint agrega un prefijo a cada una de las áreas problemáticas con una R, C, W, E o F, que significan:
+
+\begin{itemize}
+    \item \textbf{R}efactorizar por una violación de la métrica de ``buena práctica''.
+    \item \textbf{C}onvención por violación del estándar de codificación.
+    \item \textbf{W}arning (Advertencia) por problemas estilísticos o problemas de programación menores.
+    \item \textbf{E}rror por problemas importantes de programación (es decir, muy probablemente un bug).
+    \item \textbf{F}atal por errores que impidieron el procesamiento adicional.
+\end{itemize}
+
+La lista completa de mensajes y su significado puede encontrarse en el sitio web oficial de la herramienta, donde se encuentran agrupados por categoría o área problemática.  La url es: \small{\url{https://pylint.pycqa.org/en/latest/user_guide/messages/messages_overview.html}}.
+
+\subsubsection{Formato automático - Black}
+
+Black es una herramienta de formateo de código para Python conocida por su enfoque en la simplicidad y la uniformidad. A menudo se le llama ``el formateador de código sin compromisos'' debido a su filosofía de tener una sola forma estandarizada y automatizada de formatear el código Python. Esto contrasta con otras herramientas de formateo que pueden permitir una mayor configuración o variaciones en el estilo de codificación \citep{black}.
+
+Algunas características clave de Black incluyen:
+
+\begin{itemize}
+    \item Automatización: Black reformatea todo el archivo de código con solo un comando, sin necesidad de ajustes manuales.
+    \item Consistencia: aplica un estilo consistente en todos los proyectos de Python al seguir un conjunto de reglas predefinido, lo que ayuda a mejorar la legibilidad y reducir el tiempo dedicado a discutir sobre estilos de codificación en revisiones de código.
+    \item Integración fácil: puede integrarse fácilmente con editores de texto y entornos de desarrollo integrados (IDEs), así como con sistemas de integración continua/entrega continua (CI/CD).
+    \item Seguridad: está diseñado para realizar cambios en el código que no afecten su comportamiento, lo que lo hace seguro para usar en proyectos grandes y complejos.
+\end{itemize}
+
+Al tener el código un formato unificado entre los distintos desarrolladores, las revisiones de código, especialmente bajo control de versiones, se pueden hacer más rápidamente debido a que los \textit{diffs }entre versiones son lo más pequeños posible.  Black es un formateador de código PEP-8 compatible.
+
+Para instalar Black, se debe ejecutar el siguiente comando en una terminal:
+
+\begin{lstlisting}[language=bash]
+python pip install black
+\end{lstlisting}
+
+Para utilizar Black, se debe ejecutar el siguiente comando:
+
+\begin{lstlisting}[language=bash]
+black modules_or_packages
+\end{lstlisting}
+
+\subsubsection{Entorno de Desarrollo Integrado - Visual Studio Code}
+
+Visual Studio Code, disponible en \url{https://code.visualstudio.com/}, es un editor de código fuente de código abierto que soporta múltiples lenguajes de programación. Destaca por su flexibilidad y capacidad de personalización. Permite integrar extensiones que amplían sus funcionalidades. Entre sus características se encuentran el soporte para depuración integrada, control de versiones con Git y herramientas de autocompletado. También ofrece una interfaz de usuario intuitiva y un sistema de gestión de proyectos eficiente. VSCode es compatible con Windows, macOS y GNU/Linux.
+
+Existen múltiples extensiones disponibles para Python. Entre las más destacadas se encuentran el plugin \texttt{Python}, que proporciona soporte para depuración, ejecución de código, y autocompletado de código Python, y \texttt{Pylance}, que ofrece características adicionales como análisis estático de código y autocompletado inteligente.
+
+La extensión Remote - SSH de Visual Studio Code permite utilizar cualquier máquina remota con un servidor SSH como entorno de desarrollo. Esto facilita el desarrollo y la resolución de problemas en una amplia variedad de situaciones. Mediante esta extensión, es posible desarrollar en el mismo sistema operativo al que se desplegará el software o emplear hardware más grande, rápido o especializado que el de la máquina local.
+
+Una de las ventajas de esta extensión es la capacidad de cambiar rápidamente entre diferentes entornos de desarrollo remotos, lo que permite realizar actualizaciones de manera segura sin riesgo de afectar la máquina local. Además, proporciona acceso a un entorno de desarrollo ya existente desde varias máquinas o ubicaciones, lo que aumenta la flexibilidad del proceso de desarrollo.
+
+Esta extensión resulta útil también para depurar aplicaciones que se ejecutan en otros lugares. No es necesario tener el código fuente en la máquina local para aprovechar estas ventajas, ya que la extensión ejecuta comandos y otras extensiones directamente en la máquina remota. Es posible abrir cualquier carpeta en la máquina remota y trabajar con ella de la misma forma que si estuviera en la máquina local.
+
+\clearpage
+\section{PLACA DE AUDIO BEHRINGER UMC204HD}
+
+La placa de audio UMC204HD de Behringer es una interfaz de audio profesional que posee conversores de 24-Bit de resolución vertical y una frecuencia máxima de muestreo de 192 kHz. 
+
+\section*{Descripción de la placa de audio Behringer UMC204HD}
+
+La Behringer UMC204HD es una interfaz de audio de alta calidad diseñada para la captura y procesamiento de señales de audio. Esta interfaz es compatible con sistemas operativos modernos Windows y GNU/Linux y se conecta a través de un puerto USB para aplicaciones de adquisición de señales. Su capacidad para trabajar con alta resolución y tasas de muestreo la convierte en una herramienta útil para una variedad de aplicaciones profesionales en el ámbito del análisis de señales. En la figura \ref{fig:placa} se puede apreciar una vista frontal de la interfaz de audio UMC204HD.
+
+La Behringer UMC204HD ofrece una resolución vertical de 24 bits, lo que permite una captura precisa y detallada de las señales de entrada. Esta alta resolución es esencial para la adquisición de datos en aplicaciones que requieren una representación fiel de las variaciones más pequeñas en la señal, como es el caso de los hidrófonos.
+
+La interfaz tiene una tasa de muestreo de hasta 192 kHz, lo que le permite capturar señales con una precisión temporal excelente. Esta alta tasa de muestreo es crucial para evitar aliasing y para asegurar que las señales de alta frecuencia, que pueden ser relevantes en el análisis de hidrófonos, se capturen adecuadamente.
+
+Una de las ventajas de la UMC204HD es su bajo nivel de ruido propio. Esto es particularmente importante en aplicaciones de adquisición de señales de hidrófonos, donde incluso las pequeñas fluctuaciones de ruido pueden interferir con la medición precisa de las señales. El diseño de la interfaz asegura que las señales capturadas sean lo más limpias posibles, lo que facilita un análisis más preciso.
+
+Finalmente, la UMC204HD ofrece una frecuencia de corte de 3 dB a 50 kHz. Este amplio rango de frecuencia garantiza que las señales de alta frecuencia que podrían ser relevantes en ciertas aplicaciones, como la adquisición de datos de hidrófonos, se capturen sin pérdidas significativas. La capacidad de operar con un rango de frecuencias tan amplio permite realizar mediciones detalladas en un rango extendido, lo que resulta fundamental para el estudio de fenómenos acústicos de interés.
+
+
+\vspace{10px}
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=.5\textwidth]{graficos/UMC204HD.png}
+    \caption[]{Vista de la interface de audio Behringer UMC204HD, tomada del manual.}
+    \label{fig:placa}
+\end{figure}
+
+Este instrumento está diseñado para resistir condiciones ambientales adversas, con protección contra la humedad IP66 \citep{IEC60529} y capacidad para operar en un amplio rango de temperaturas. Su instalación no requiere calibración ni ajustes, y su diseño sin partes móviles elimina la necesidad de mantenimiento regular \citep{WindSonicManual2019}. 
+
+La interface de audio puede conectarse a una PC a través de una conexión USB 2.0.
+
+El principio de funcionamiento se basa en la medición del tiempo de vuelo de puls
+
+\clearpage
+
+% Inicialmente relajar los flotantes
+\relaxFloats
+
+%

@@ -1,0 +1,230 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc} % para que pueda partir palabras con acentos
+\usepackage[utf8]{inputenc}
+\usepackage{rotating}
+\usepackage{graphicx}
+\usepackage[spanish]{babel} % Ojo que esto cambia el nombre de las secciones
+\usepackage{times,url}
+\usepackage{amsmath}
+\usepackage{mathrsfs}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+% \usepackage{hyphen}
+% \hyphenation{car-dú-me-nes dis-con-ti-nui-da-des}
+\usepackage{fullpage}
+
+\usepackage[a4paper,bottom=2.7cm,top=2.7cm,left=2.5cm,right=2.5cm]{geometry}
+\usepackage{fancyhdr} % Esto cambiará la ubicación de los numeritos de las páginas
+\usepackage{grffile} % Para tipear nombres de archivo con espacios
+%\usepackage{esvect} % Para poner flechas de vector más copadas
+\usepackage{array} % Paquete que mejora la funcionalidad de array
+
+% Carga de paquetes extra
+\usepackage{color}
+\usepackage{colortbl}
+\usepackage{tocloft}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{fix-cm}
+\usepackage{natbib}
+\setcitestyle{square}
+\usepackage{multirow}
+\usepackage{bigstrut}
+
+\usepackage{wrapfig}
+\usepackage{enumitem}
+\usepackage{appendix}
+
+\usepackage{mdframed}
+\usepackage{listings}
+\definecolor{light-gray}{gray}{0.95}
+
+% Se carga la hoja de estilo
+\usepackage{RT_estilo} 
+\usepackage{fancyvrb}
+
+% Fracciones bonitas
+\usepackage{nicefrac}
+
+\usepackage{listings}
+\usepackage{xcolor}
+% Definir un color personalizado 'cremita'
+\definecolor{cremita}{RGB}{255,253,208}
+
+\lstset{
+  backgroundcolor=\color{cremita}, % Usar el color 'cremita' como fondo
+    frame=single, % añade un recuadro simple alrededor del código
+    framerule=0pt, % grosor del borde del recuadro
+    framesep=3pt, % espacio entre el recuadro y el contenido
+    rulecolor=\color{gray}, % color del recuadro
+    xleftmargin=\parindent, % margen izquierdo
+    xrightmargin=0px, % margen derecho
+}
+
+
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=false, % Establece colorlinks en falso para desactivar los enlaces de color
+    pdfborder={0 0 0}, % Establece el borde del PDF a 0 para eliminar el recuadro
+}
+
+\PassOptionsToPackage{hyphens}{url}\usepackage{hyperref}
+
+\usepackage{pdflscape}
+
+%\renewcommand{\topfraction}{0.85}
+%\renewcommand{\bottomfraction}{0.85}
+%\renewcommand{\textfraction}{0.1}
+%\renewcommand{\floatpagefraction}{0.75}
+%\setcounter{topnumber}{4}
+%\setcounter{bottomnumber}{3}
+%\setcounter{totalnumber}{6}
+
+\usepackage{float}
+\usepackage{placeins}
+
+% Aumentar la proporción de flotantes permitidos por página hasta la sección específica
+\newcommand{\relaxFloats}{
+    \renewcommand{\topfraction}{0.85}
+    \renewcommand{\bottomfraction}{0.85}
+    \renewcommand{\textfraction}{0.1}
+    \renewcommand{\floatpagefraction}{0.75}
+    \setcounter{topnumber}{4}
+    \setcounter{bottomnumber}{3}
+    \setcounter{totalnumber}{6}
+}
+
+% Restaurar a los valores por defecto a partir de una sección específica
+\newcommand{\restoreFloats}{
+    \renewcommand{\topfraction}{0.7}
+    \renewcommand{\bottomfraction}{0.3}
+    \renewcommand{\textfraction}{0.2}
+    \renewcommand{\floatpagefraction}{0.5}
+    \setcounter{topnumber}{2}
+    \setcounter{bottomnumber}{1}
+    \setcounter{totalnumber}{3}
+}
+
+% =====================================================================================================
+% =====================================================================================================
+%
+% DOCUMENTO PROPIAMENTE DICHO
+%
+% =====================================================================================================
+% =====================================================================================================
+
+\begin{document}
+
+% =====================================================================================================
+% =====================================================================================================
+% PORTADA
+% =====================================================================================================
+% =====================================================================================================
+\include{1_Portada}
+
+% =====================================================================================================
+% =====================================================================================================
+% PÁGINA DE RESUMEN EN CASTELLANO Y EN INGLÉS
+% =====================================================================================================
+% =====================================================================================================
+
+\include{2_Resumen}
+
+% =====================================================================================================
+% =====================================================================================================
+% PÁGINA DESCRIPTIVA DE PERTENENCIA A PROYECTO DEL TRABAJO
+% =====================================================================================================
+% =====================================================================================================
+
+\include{3_Pertenencia}
+
+% =====================================================================================================
+% =====================================================================================================
+% PÁGINA DE AGRADECIMIENTOS
+% =====================================================================================================
+% =====================================================================================================
+% La configuración está optimizada para fotos de 3cm de ancho (armónicamente).  
+%
+
+\include{4_Agradecimientos}
+
+% =====================================================================================================
+% =====================================================================================================
+% ÍNDICE
+% =====================================================================================================
+% =====================================================================================================
+
+
+\tableofcontents
+\clearpage
+
+
+% =====================================================================================================
+% =====================================================================================================
+% GLOSARIO DE SIGLAS
+% =====================================================================================================
+% =====================================================================================================
+
+\include{5_Glosario}
+
+% =====================================================================================================
+% =====================================================================================================
+% LISTA DE FIGURAS
+% =====================================================================================================
+% =====================================================================================================
+
+\begin{center}
+\listoffigures
+\end{center}
+\clearpage
+
+% =====================================================================================================
+% =====================================================================================================
+% LISTA DE TABLAS
+% =====================================================================================================
+% =====================================================================================================
+
+\begin{center}
+\listoftables
+\end{center}
+\clearpage
+
+% =====================================================================================================
+% =====================================================================================================
+% CUERPO DEL INFORME
+% =====================================================================================================
+% =====================================================================================================
+
+\include{6_Cuerpo}
+
+% =====================================================================================================
+% =====================================================================================================
+% PÁGINA DE REFERENCIAS
+% =====================================================================================================
+% =====================================================================================================
+
+\clearpage
+
+\addcontentsline{toc}{section}{REFERENCIAS}
+\bibliographystyle{apa-good}	% (uses file "plain.bst")
+\bibliography{7_Referencias}	% Acá está la base de datos de referencias. Espera el archivo "7_Referencias.bib"
+
+\clearpage
+
+% =====================================================================================================
+% =====================================================================================================
+% APÉNDICE
+% =====================================================================================================
+% =====================================================================================================
+
+%
+%% Reseteo y cambio de numeración para los apéndices
+%\setcounter{section}{0}
+%\renewcommand\appendix{\Roman{section}}
+%%\def\thesection{\Roman{section}}
+%
+%\include{8_Apendices}
+%
+
+\end{document}
+

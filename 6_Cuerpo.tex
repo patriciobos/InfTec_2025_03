@@ -198,6 +198,7 @@ La biblioteca estándar \texttt{datetime} permite manipular fechas y horas de ma
 
 La biblioteca estándar \texttt{os} proporciona funciones para interactuar con el sistema operativo de forma portable. En el módulo \texttt{BehringerHandler}, se utiliza para obtener la ruta absoluta del script en ejecución, crear subdirectorios (como \texttt{recordings} para guardar archivos de audio) y construir rutas de forma segura e independiente del sistema operativo.  El uso de \texttt{os} es esencial para garantizar la correcta gestión de archivos y configuraciones en distintos entornos de ejecución.
 
+
 \subsection{Dependencias y gestión del entorno}
 
 La lista completa de dependencias necesarias para ejecutar el módulo \texttt{BehringerHandler} se encuentra documentada en el archivo \texttt{requirements.txt}. Este archivo fue generado utilizando el comando \texttt{pip freeze > requirements.txt} desde un entorno virtual de Python configurado específicamente para este proyecto. La utilización de entornos virtuales permite aislar las versiones de los paquetes, asegurando la reproducibilidad del entorno de ejecución.
@@ -228,29 +229,18 @@ six==1.17.0
 
 \subsection{Arquitectura del módulo}
 
-El diseño está centrado en la clase \texttt{BehringerHandler}, que actúa como fachada para todas las operaciones necesarias. La arquitectura sigue una lógica secuencial:
+El diseño del módulo \texttt{BehringerHandler} está centrado en encapsular toda la funcionalidad de adquisición de audio a través de una interfaz USB Behringer, utilizando una arquitectura modular y extensible. La clase actúa como fachada para todas las operaciones, ofreciendo una interfaz clara basada en un ciclo de vida típico: inicialización, grabación y liberación de recursos.
+
+Este ciclo se articula mediante un conjunto de métodos públicos que definen el flujo de uso:
 
 \begin{enumerate}
-    \item Inicialización del entorno (\texttt{init}): escanea los dispositivos de audio y selecciona automáticamente el que corresponde a Behringer.
-    \item Apertura del flujo de entrada (\texttt{open}).
-    \item Grabación asincrónica (\texttt{record} y \texttt{\_write\_audio}) mediante un hilo dedicado y una cola de datos.
-    \item Cierre y liberación de recursos (\texttt{stop\_recording}, \texttt{close}, \texttt{deinit}).
+    \item \texttt{init()} inicializa la interfaz PyAudio y detecta automáticamente el dispositivo Behringer conectado por USB.
+    \item \texttt{record(duration)} lanza una grabación asincrónica por el tiempo especificado. Internamente, abre el stream de entrada (\texttt{open()}), inicia un hilo de escritura en disco (\texttt{\_write\_audio()}) y activa un callback (\texttt{\_callback()}) que llena una cola de datos.
+    \item \texttt{stop\_recording()} sincroniza el final de la grabación, deteniendo el hilo y limpiando los buffers.
+    \item \texttt{deinit()} libera todos los recursos y deja el módulo en estado reutilizable.
 \end{enumerate}
 
-En la figura \ref{fig:workflow} se presenta un diagrama de flujo general con los bloques principales y la secuencia lógica de ejecución del módulo Beheringer\_Handler.
-
-\begin{figure}[htpb]
-    \centering
-    \includegraphics[width=0.6\textwidth]{graficos/workflow.png}
-    \caption{Diagrama de flujo de funcionamiento del módulo \texttt{BehringerHandler}}
-    \label{fig:workflow}
-\end{figure}
-
-Durante la ejecución, los eventos relevantes se registran tanto en consola como el archivo con extensión .log.
-
-\subsection{Uso del módulo}
-
-El flujo de uso del módulo es el siguiente:
+Desde el punto de vista del usuario, el uso del módulo sigue una secuencia lógica simple:
 
 \begin{verbatim}
 from behringer_handler import BehringerHandler
@@ -262,51 +252,106 @@ handler.stop_recording()
 handler.deinit()
 \end{verbatim}
 
+Durante la ejecución, los datos son adquiridos por el stream de PyAudio y colocados en una cola mediante el callback. En paralelo, un hilo escribe esos datos en un archivo WAV. Todos los eventos relevantes —como el inicio o cierre del stream, errores o advertencias— se registran mediante el sistema de \texttt{logging}, tanto en consola como en un archivo de log.
+
+Este diseño permite desacoplar la adquisición en tiempo real del almacenamiento en disco, reduciendo riesgos de pérdida de datos y manteniendo la modularidad del sistema. Además, garantiza una interfaz coherente con otros módulos de adquisición definidos dentro del sistema EAMRRA.
+
+\begin{figure}[htpb]
+    \centering
+    \includegraphics[width=0.6\textwidth]{graficos/workflow.png}
+    \label{fig:workflow}
+\end{figure}
+
+
+
+
 \subsection{Descripción de la clase y sus métodos}
 
 \texttt{BehringerHandler} extiende de \texttt{BaseHandler} e implementa los métodos clave para el manejo del dispositivo. La utilización de una clase base común responde a una estrategia de diseño orientada a la modularidad y escalabilidad del sistema EAMRRA, donde múltiples módulos de adquisición o control comparten una estructura funcional similar. 
 
 La clase \texttt{BaseHandler} actúa como plantilla abstracta, y define una interfaz mínima que obliga a los módulos derivados a implementar ciertos métodos esenciales, como \texttt{init}, \texttt{deinit}, \texttt{open} y \texttt{close}. Esta decisión asegura una simetría en la arquitectura del sistema, facilita el mantenimiento y permite la integración homogénea de nuevos módulos en el futuro. Además, permite aplicar patrones de programación como la inversión de dependencias, delegando a cada módulo el detalle de implementación mientras se conserva una estructura común y predecible.
 
-A continuación se describen los métodos principales de la clase \texttt{BehringerHandler}:
+A continuación se describen los métodos principales de la clase \texttt{BehringerHandler} con un detalle sobre los parámetros que reciben, los atributos que modifican, una descripción sintética de las acciones que realizan y finalmente, qué errores controlan, en cada caso.
 
-\subsubsection*{\texttt{\_\_init\_\_}}
+\subsubsection*{Atributos principales definidos en \texttt{\_\_init\_\_}}
 
-Constructor de la clase. Inicializa atributos, crea el logger y configura los manejadores de archivo y consola.
+En el constructor se inicializan los siguientes atributos:
+
+\begin{itemize}
+    \item \texttt{audio\_interface}: objeto de PyAudio encargado de la comunicación con el hardware.
+    \item \texttt{device\_index}: índice del dispositivo de audio identificado como Behringer.
+    \item \texttt{stream}: flujo de entrada de audio (inicialmente \texttt{None}).
+    \item \texttt{is\_recording}: bandera booleana que indica si una grabación está en curso.
+    \item \texttt{recording\_thread}: hilo que ejecuta la escritura del audio en segundo plano.
+    \item \texttt{start\_time}, \texttt{duration}: variables para controlar el tiempo de grabación.
+    \item \texttt{frames\_queue}: cola de datos compartida entre el stream y el hilo de escritura.
+    \item \texttt{logger}: objeto de \texttt{logging} configurado para registrar eventos en consola y archivo.
+    \item \texttt{log\_file}, \texttt{output\_path}: rutas de archivo utilizadas durante la ejecución.
+\end{itemize}
 
 \subsubsection*{\texttt{init()}}
 
-Escanea los dispositivos de audio disponibles con PyAudio. Si encuentra uno con el nombre \texttt{Behringer} o que incluya \texttt{USB} y tenga canales de entrada, lo selecciona y guarda su índice.
+\begin{itemize}
+    \item \textbf{Parámetros:} ninguno.
+    \item \textbf{Atributos modificados:} \texttt{audio\_interface}, \texttt{device\_index}.
+    \item \textbf{Acciones:} escanea los dispositivos de audio disponibles mediante \texttt{PyAudio} y selecciona automáticamente el que contiene ``Behringer'' o ``USB'' en su nombre, y tiene canales de entrada.
+    \item \textbf{Control de errores:} si ya fue inicializado, emite un log y no repite el proceso. Si no encuentra el dispositivo, registra una advertencia. Si ocurre una excepción, se registra el error y se garantiza la liberación del objeto \texttt{PyAudio}.
+\end{itemize}
 
 \subsubsection*{\texttt{open()}}
 
-Abre un stream de entrada en modo no bloqueante para el dispositivo detectado, utilizando formato \texttt{paInt24}, dos canales, y frecuencia de muestreo de 192 kHz. Registra advertencias si el dispositivo no está inicializado.
-
-\subsubsection*{\texttt{\_callback(in\_data, frame\_count, time\_info, status)}}
-
-Función callback del stream. Si la grabación está activa, coloca los datos de entrada en una cola de frames. Si no, retorna \texttt{paComplete}.
+\begin{itemize}
+    \item \textbf{Parámetros:} ninguno.
+    \item \textbf{Atributos modificados:} \texttt{stream}.
+    \item \textbf{Acciones:} abre un flujo de entrada utilizando el índice del dispositivo detectado. Establece el formato en 24 bits, dos canales, 192 kHz y un tamaño de buffer de 8192 muestras.
+    \item \textbf{Control de errores:} si el dispositivo no fue inicializado, se emite una advertencia. Si ocurre una excepción al abrir el flujo, se registra el error y el atributo \texttt{stream} se deja en \texttt{None}.
+\end{itemize}
 
 \subsubsection*{\texttt{record(duration)}}
 
-Inicia una grabación de duración determinada (en segundos). Crea un hilo que ejecuta \texttt{\_write\_audio}, abre el stream e inicia la adquisición. El archivo de salida se guarda con nombre basado en fecha y hora en la carpeta \texttt{recordings}.
+\begin{itemize}
+    \item \textbf{Parámetros:} \texttt{duration} (float), duración de la grabación en segundos.
+    \item \textbf{Atributos modificados:} \texttt{is\_recording}, \texttt{start\_time}, \texttt{duration}, \texttt{recording\_thread}, \texttt{output\_path}.
+    \item \textbf{Acciones:} crea el directorio \texttt{recordings} si no existe, genera un nombre de archivo único basado en fecha y hora, limpia la cola de audio, llama a \texttt{open()} y lanza un hilo que ejecuta \texttt{\_write\_audio()}.
+    \item \textbf{Control de errores:} si el dispositivo no está inicializado, emite una advertencia y no comienza la grabación.
+\end{itemize}
 
 \subsubsection*{\texttt{\_write\_audio()}}
 
-Hilo que extrae datos de la cola y los escribe dinámicamente en un archivo WAV. Utiliza \texttt{wave} para manejar el formato y guarda las grabaciones en disco hasta que se completa el tiempo solicitado.
+\begin{itemize}
+    \item \textbf{Parámetros:} ninguno (método privado llamado por un hilo).
+    \item \textbf{Atributos modificados:} ninguno directamente; opera sobre \texttt{frames\_queue}.
+    \item \textbf{Acciones:} crea el archivo WAV, configura los parámetros del encabezado y escribe bloques de audio tomados desde \texttt{frames\_queue} hasta que finalice la grabación o la cola se vacíe.
+    \item \textbf{Control de errores:} utiliza tiempo de espera en la cola para evitar bloqueos, registra la finalización y llama a \texttt{close()} al terminar.
+\end{itemize}
 
 \subsubsection*{\texttt{stop\_recording()}}
 
-Detiene la grabación, cierra el hilo de escritura y registra el evento.
-
-\subsubsection*{\texttt{deinit()}}
-
-Libera el objeto PyAudio, permite reinicializar el sistema si se vuelve a ejecutar \texttt{init()}.
+\begin{itemize}
+    \item \textbf{Parámetros:} ninguno.
+    \item \textbf{Atributos modificados:} \texttt{is\_recording}, \texttt{recording\_thread}.
+    \item \textbf{Acciones:} cambia el estado de grabación, espera a que el hilo finalice (join) y limpia referencias.
+    \item \textbf{Control de errores:} verifica que el hilo exista y esté activo antes de intentar finalizarlo. Registra eventos relevantes.
+\end{itemize}
 
 \subsubsection*{\texttt{close()}}
 
-Detiene y cierra el stream de audio si está activo. Libera la referencia.
+\begin{itemize}
+    \item \textbf{Parámetros:} ninguno.
+    \item \textbf{Atributos modificados:} \texttt{stream}.
+    \item \textbf{Acciones:} detiene y cierra el flujo de audio si está activo, y libera la referencia.
+    \item \textbf{Control de errores:} si no hay stream activo, emite una advertencia; si ocurre una excepción, se registra.
+\end{itemize}
 
-\subsection{Diagrama de flujo del módulo}
+\subsubsection*{\texttt{deinit()}}
+
+\begin{itemize}
+    \item \textbf{Parámetros:} ninguno.
+    \item \textbf{Atributos modificados:} \texttt{audio\_interface}, \texttt{device\_index}.
+    \item \textbf{Acciones:} cierra el objeto \texttt{PyAudio} y limpia los atributos relacionados al dispositivo.
+    \item \textbf{Control de errores:} si ya está desinicializado, se registra y se evita repetir el proceso.
+\end{itemize}
+
 
 
 

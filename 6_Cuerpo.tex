@@ -176,8 +176,145 @@ La interfaz tiene una tasa de muestreo de hasta 192 kHz, lo que le permite captu
 \end{figure}
 
 \clearpage
+\section{DISEÑO E IMPLEMENTACIÓN }
 
-% Inicialmente relajar los flotantes
-\relaxFloats
+\subsection{Descripción general del módulo}
+
+El módulo \texttt{BehringerHandler} fue desarrollado en Python con el objetivo de controlar una interfaz de audio USB marca Behringer de forma programática. Permite su inicialización, apertura de flujos de entrada, grabación asincrónica y gestión completa de recursos. Está pensado para ser utilizado en sistemas de adquisición acústica en tiempo real, y su diseño modular facilita su integración en arquitecturas mayores, como estaciones de monitoreo o sistemas embebidos.
+
+El funcionamiento interno del módulo se apoya en varias bibliotecas estándar y externas. Utiliza \texttt{pyaudio} para el acceso de bajo nivel al hardware de audio, \texttt{wave} para la escritura de los datos capturados en formato WAV, \texttt{threading} para realizar la grabación en paralelo al hilo principal y \texttt{queue} para sincronizar los datos entre procesos. Además, se emplean \texttt{logging} para la trazabilidad de eventos, \texttt{datetime} para la generación de nombres de archivo basados en marca temporal y \texttt{os} para la gestión del entorno de ejecución y rutas de archivo. Esta combinación de módulos permite una operación robusta, escalable y fácilmente depurable.
+
+La biblioteca \texttt{logging} de Python se utiliza para generar registros estructurados durante la ejecución del código, y permite monitorear el estado del sistema, detectar errores y realizar trazabilidad de eventos. En el módulo \texttt{BehringerHandler}, se implementa un sistema de log dual que escribe tanto en consola como en un archivo de texto (\texttt{behringer\_handler.log}). Este sistema utiliza formatos personalizados con marcas de tiempo y niveles de severidad (INFO, WARNING, ERROR), lo que facilita el diagnóstico en tiempo real y la revisión posterior del funcionamiento del sistema. La inclusión de \texttt{logging} mejora la mantenibilidad y confiabilidad del software, especialmente en entornos donde no hay interacción directa con el usuario.
+
+La biblioteca \texttt{PyAudio} proporciona una interfaz en Python para interactuar con PortAudio, una biblioteca de código abierto para la captura y reproducción de audio en tiempo real. Este paquete permite abrir flujos de entrada o salida de audio con parámetros configurables como tasa de muestreo, formato, número de canales y tamaño de buffer. En el caso de \texttt{BehringerHandler}, \texttt{PyAudio} es utilizado para detectar dispositivos de audio disponibles, abrir un flujo de entrada en formato \texttt{paInt24} y capturar señales a alta resolución (192 kHz, 2 canales). Gracias a su capacidad para operar en modo no bloqueante mediante callbacks, \texttt{PyAudio} permite implementar grabaciones asincrónicas eficientes, fundamentales para aplicaciones de adquisición continua o en tiempo real.
+
+La biblioteca estándar \texttt{wave} de Python permite la manipulación de archivos de audio en formato WAV (RIFF). Proporciona una interfaz sencilla para la escritura y lectura de audio en formato PCM (Pulse Code Modulation), y permite definir parámetros como la cantidad de canales, la tasa de muestreo y la resolución en bits. En el módulo \texttt{BehringerHandler}, \texttt{wave} se utiliza para almacenar las grabaciones capturadas por el stream de PyAudio en archivos de alta calidad de 24 bits. La escritura se realiza en tiempo real desde un hilo separado, para asegurar la integridad de los datos y su disponibilidad inmediata en disco para posteriores análisis.
+
+La biblioteca \texttt{threading} proporciona soporte para la ejecución concurrente de código mediante la creación y gestión de hilos de ejecución. En \texttt{BehringerHandler}, se utiliza para realizar la escritura de audio en disco de forma asincrónica, separando la captura en tiempo real del procesamiento de los datos. Esto permite que el flujo principal de adquisición no se vea interrumpido por operaciones de entrada/salida, lo que mejora el rendimiento y evita pérdidas de datos. El uso de \texttt{threading} resulta esencial para garantizar grabaciones continuas y confiables, especialmente en sistemas que requieren alta tasa de muestreo o baja latencia.
+
+La biblioteca \texttt{queue} proporciona una estructura de datos segura para comunicación entre hilos en entornos multithreading. En el módulo \texttt{BehringerHandler}, se utiliza una instancia de \texttt{Queue} para almacenar de forma temporal los bloques de audio recibidos por el callback del stream de PyAudio. Esta cola permite desacoplar la adquisición de datos (en tiempo real) de la escritura en disco, evitando pérdidas o bloqueos por operaciones lentas de entrada/salida. El uso de \texttt{queue} garantiza una sincronización segura y eficiente entre el hilo de captura y el hilo de grabación.
+
+La biblioteca estándar \texttt{datetime} permite manipular fechas y horas de manera precisa y flexible. En el módulo  \texttt{BehringerHandler}, se utiliza para generar marcas de tiempo en el momento de iniciar una grabación, lo que permite construir nombres de archivo únicos con el formato \texttt{YYYYMMDD\_HHMMSS}. Esta práctica facilita la organización de las grabaciones, evita sobreescrituras accidentales y proporciona una trazabilidad temporal inmediata. El uso de \texttt{datetime} también permite registrar eventos en los logs con exactitud temporal.
+
+La biblioteca estándar \texttt{os} proporciona funciones para interactuar con el sistema operativo de forma portable. En el módulo \texttt{BehringerHandler}, se utiliza para obtener la ruta absoluta del script en ejecución, crear subdirectorios (como \texttt{recordings} para guardar archivos de audio) y construir rutas de forma segura e independiente del sistema operativo.  El uso de \texttt{os} es esencial para garantizar la correcta gestión de archivos y configuraciones en distintos entornos de ejecución.
+
+\subsection{Dependencias y gestión del entorno}
+
+La lista completa de dependencias necesarias para ejecutar el módulo \texttt{BehringerHandler} se encuentra documentada en el archivo \texttt{requirements.txt}. Este archivo fue generado utilizando el comando \texttt{pip freeze > requirements.txt} desde un entorno virtual de Python configurado específicamente para este proyecto. La utilización de entornos virtuales permite aislar las versiones de los paquetes, asegurando la reproducibilidad del entorno de ejecución.
+
+Para reconstruir el entorno en una nueva máquina o entorno limpio, se recomienda crear un entorno virtual (por ejemplo, mediante \texttt{python -m venv venv}) y luego instalar todas las dependencias mediante el comando \texttt{pip install -r requirements.txt}. Esto garantiza que las versiones exactas utilizadas durante el desarrollo serán replicadas, y permite reducir los  errores por incompatibilidades entre bibliotecas.
+
+A continuación, se presenta la lista de dependencias incluidas en \texttt{requirements.txt}:
+
+\begin{verbatim}
+contourpy==1.3.1
+cycler==0.12.1
+fonttools==4.56.0
+iniconfig==2.1.0
+kiwisolver==1.4.8
+matplotlib==3.10.1
+numpy==2.2.3
+packaging==24.2
+pillow==11.1.0
+pluggy==1.5.0
+PyAudio==0.2.14
+pyparsing==3.2.1
+pytest==8.3.5
+python-dateutil==2.9.0.post0
+schedule==1.2.2
+six==1.17.0
+\end{verbatim}
+
+
+\subsection{Arquitectura del módulo}
+
+El diseño está centrado en la clase \texttt{BehringerHandler}, que actúa como fachada para todas las operaciones necesarias. La arquitectura sigue una lógica secuencial:
+
+\begin{enumerate}
+    \item Inicialización del entorno (\texttt{init}): escanea los dispositivos de audio y selecciona automáticamente el que corresponde a Behringer.
+    \item Apertura del flujo de entrada (\texttt{open}).
+    \item Grabación asincrónica (\texttt{record} y \texttt{\_write\_audio}) mediante un hilo dedicado y una cola de datos.
+    \item Cierre y liberación de recursos (\texttt{stop\_recording}, \texttt{close}, \texttt{deinit}).
+\end{enumerate}
+
+En la figura \ref{fig:workflow} se presenta un diagrama de flujo general con los bloques principales y la secuencia lógica de ejecución del módulo Beheringer\_Handler.
+
+\begin{figure}[htpb]
+    \centering
+    \includegraphics[width=0.6\textwidth]{graficos/workflow.png}
+    \caption{Diagrama de flujo de funcionamiento del módulo \texttt{BehringerHandler}}
+    \label{fig:workflow}
+\end{figure}
+
+Durante la ejecución, los eventos relevantes se registran tanto en consola como el archivo con extensión .log.
+
+\subsection{Uso del módulo}
+
+El flujo de uso del módulo es el siguiente:
+
+\begin{verbatim}
+from behringer_handler import BehringerHandler
+
+handler = BehringerHandler()
+handler.init()
+handler.record(duration=10)  # graba 10 segundos de audio
+handler.stop_recording()
+handler.deinit()
+\end{verbatim}
+
+\subsection{Descripción de la clase y sus métodos}
+
+\texttt{BehringerHandler} extiende de \texttt{BaseHandler} e implementa los métodos clave para el manejo del dispositivo. La utilización de una clase base común responde a una estrategia de diseño orientada a la modularidad y escalabilidad del sistema EAMRRA, donde múltiples módulos de adquisición o control comparten una estructura funcional similar. 
+
+La clase \texttt{BaseHandler} actúa como plantilla abstracta, y define una interfaz mínima que obliga a los módulos derivados a implementar ciertos métodos esenciales, como \texttt{init}, \texttt{deinit}, \texttt{open} y \texttt{close}. Esta decisión asegura una simetría en la arquitectura del sistema, facilita el mantenimiento y permite la integración homogénea de nuevos módulos en el futuro. Además, permite aplicar patrones de programación como la inversión de dependencias, delegando a cada módulo el detalle de implementación mientras se conserva una estructura común y predecible.
+
+A continuación se describen los métodos principales de la clase \texttt{BehringerHandler}:
+
+\subsubsection*{\texttt{\_\_init\_\_}}
+
+Constructor de la clase. Inicializa atributos, crea el logger y configura los manejadores de archivo y consola.
+
+\subsubsection*{\texttt{init()}}
+
+Escanea los dispositivos de audio disponibles con PyAudio. Si encuentra uno con el nombre \texttt{Behringer} o que incluya \texttt{USB} y tenga canales de entrada, lo selecciona y guarda su índice.
+
+\subsubsection*{\texttt{open()}}
+
+Abre un stream de entrada en modo no bloqueante para el dispositivo detectado, utilizando formato \texttt{paInt24}, dos canales, y frecuencia de muestreo de 192 kHz. Registra advertencias si el dispositivo no está inicializado.
+
+\subsubsection*{\texttt{\_callback(in\_data, frame\_count, time\_info, status)}}
+
+Función callback del stream. Si la grabación está activa, coloca los datos de entrada en una cola de frames. Si no, retorna \texttt{paComplete}.
+
+\subsubsection*{\texttt{record(duration)}}
+
+Inicia una grabación de duración determinada (en segundos). Crea un hilo que ejecuta \texttt{\_write\_audio}, abre el stream e inicia la adquisición. El archivo de salida se guarda con nombre basado en fecha y hora en la carpeta \texttt{recordings}.
+
+\subsubsection*{\texttt{\_write\_audio()}}
+
+Hilo que extrae datos de la cola y los escribe dinámicamente en un archivo WAV. Utiliza \texttt{wave} para manejar el formato y guarda las grabaciones en disco hasta que se completa el tiempo solicitado.
+
+\subsubsection*{\texttt{stop\_recording()}}
+
+Detiene la grabación, cierra el hilo de escritura y registra el evento.
+
+\subsubsection*{\texttt{deinit()}}
+
+Libera el objeto PyAudio, permite reinicializar el sistema si se vuelve a ejecutar \texttt{init()}.
+
+\subsubsection*{\texttt{close()}}
+
+Detiene y cierra el stream de audio si está activo. Libera la referencia.
+
+\subsection{Diagrama de flujo del módulo}
+
+
+
+
+\clearpage
+\section{PRUEBAS Y ENSAYOS}
+
+\clearpage
+\section{CONCLUSIONES}
 
 %

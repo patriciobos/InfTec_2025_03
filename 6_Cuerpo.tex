@@ -6,7 +6,7 @@ El objetivo de este informe técnico es documentar el diseño e implementación 
 
 La estación EAMMRA es una boya de superficie de diseño específico para la medición de Ruido Ambiente submarino cuya concepción, diseño y fabricación se encuentran documentados en respectivos informes técnicos \citep{EAMMRA_ingConceptual}, \citep{EAMMRA_diseno} y \citep{EAMMRA_subsistemas}.  
 
-El control de la estación en general, y la interacción con la placa en particular, se realizan con una computadora de grado industrial Kaise KBOX-S J6412. Esta computadora pertenece a la categoría de \textit{fanless embedded systems}, que son sistemas de misión específica sin partes móviles y es especialmente adecuada para aplicaciones de funcionamiento autónomo.  Cuenta con un procesador Intel Celeron J6412 de cuatro núcleos y memoria DDR4 de 16 GB \citep{kaise}, lo que le otorga al sistema una razonable capacidad de cómputo para el bajo consumo de energía que requiere la aplicación. En la figura \ref{fig:kaise} se muestra una vista frontal y trasera de la computadora y se pueden observarlas interfaces y conectores disponibles.
+El control de la estación en general, y la interacción con la placa en particular, se realizan con una computadora de grado industrial Kaise KBOX-S J6412. Esta computadora pertenece a la categoría de \textit{fanless embedded systems}, que son sistemas de misión específica sin partes móviles y es especialmente adecuada para aplicaciones de funcionamiento autónomo.  Cuenta con un procesador Intel Celeron J6412 de cuatro núcleos y memoria DDR4 de 16 GB \citep{kaise}, lo que le otorga al sistema una razonable capacidad de cómputo para el bajo consumo de energía que requiere la aplicación. En la figura \ref{fig:kaise} se muestra una vista frontal y trasera de la computadora y se pueden observar las interfaces y conectores disponibles.
  
 \begin{figure}[htpb]
     \centering
@@ -43,7 +43,7 @@ La guía cubre varios aspectos de la codificación, que incluyen:
 	\item Comentarios: cuándo y cómo usar comentarios para mejorar la legibilidad del código.
 \end{itemize}
 
-Asimismo, se utiliza la convención \textit{Python Enhancement Proposal} 257, (PEP-257).  Esta convención define el formato y estilo para la documentación, también llamada \textit{Python's docstrings} que aplica a módulos, clases, funciones y métodos \citep{pep257}.  Adicionalmente, si los \textit{docstring} se escriben en forma consistente, exiten herramientas capaces de generar documentación directamente del código.  Esto permite mantener más fácilmente la documentación actualizada dentro del mismo código.
+Asimismo, se utiliza la convención \textit{Python Enhancement Proposal} 257, (PEP-257).  Esta convención define el formato y estilo para la documentación, también llamada \textit{Python's docstrings} que aplica a módulos, clases, funciones y métodos \citep{pep257}.  Adicionalmente, si los \textit{docstring} se escriben en forma consistente, existen herramientas capaces de generar documentación directamente del código.  Esto permite mantener más fácilmente la documentación actualizada dentro del mismo código.
 
 Existen herramientas de desarrollo como pycodestyle y pydocstyle que verifican el estilo y ayudan a asegurar que el código cumpla con las convenciones de PEP-8 y PEP-257, respectivamente.  Estas herramientas pertenecen a la categoría de linters de estilo y en algunos casos vienen integrados dentro de otros linters como Flake8 o Pylama.
 
@@ -75,7 +75,7 @@ flake8 --select E123,W503 path/to/code/
 flake8 --extend-ignore E203,W234 path/to/code/
 \end{lstlisting}
 
-El listado completo de códigos de error y su significado puede encontrarse en el sitio weboficial de la herramienta, \url{http://flake8.pycqa.org/en/latest/user/error-codes.html}.
+El listado completo de códigos de error y su significado puede encontrarse en el sitio web oficial de la herramienta, \url{http://flake8.pycqa.org/en/latest/user/error-codes.html}.
 
 \subsubsection{Analizador estático - Pylint}
 Pylint es una herramienta de análisis estático de código para Python que busca errores de programación, ayuda a hacer cumplir un estándar de codificación y busca ``malos olores'' en el código (\textit{code smells}). Utiliza diferentes técnicas para analizar el código fuente y puede identificar problemas o patrones de codificación problemáticos que podrían llevar a errores o a un código difícil de mantener o leer \citep{pylint}. 
@@ -163,7 +163,7 @@ Esta extensión resulta útil también para depurar aplicaciones que se ejecutan
 
 La Behringer UMC204HD es una interfaz de audio de alta calidad diseñada para la captura y procesamiento de señales de audio. Esta interfaz es compatible con sistemas operativos modernos Windows y GNU/Linux y se conecta a través de un puerto USB 2.0. Su capacidad para trabajar con alta resolución vertical y elevadas tasas de muestreo la convierte en una herramienta útil para una variedad de aplicaciones profesionales en el ámbito del análisis de señales. En la figura \ref{fig:placa} se puede apreciar una vista frontal y trasera de la interfaz de audio UMC204HD.
 
-La Behringer UMC204HD ofrece una resolución vertical de 24 bits, lo que permite una captura precisa y detallada de las señales de entrada. Esta alta resolución es esencial para la adquisición de datos en aplicaciones que requieren una representación fiel de las variaciones más pequeñas en la señal, como es el caso de señales adquieridas con hidrófonos.
+La Behringer UMC204HD ofrece una resolución vertical de 24 bits, lo que permite una captura precisa y detallada de las señales de entrada. Esta alta resolución es esencial para la adquisición de datos en aplicaciones que requieren una representación fiel de las variaciones más pequeñas en la señal, como es el caso de señales adquiridas con hidrófonos.
 
 La interfaz tiene una tasa de muestreo de hasta 192 kHz, lo que le permite capturar señales con una adecuada resolución temporal. Esta alta tasa de muestreo es crucial para evitar el fonómeno de \textit{aliasing} y para asegurar que las señales con contenido espectral en altas frecuencias, como las señales provenientes de los hidrófonos, se capturen adecuadamente.  Asimismo, la interface UMC204HD se caracteriza por tener bajo nivel de ruido propio. 
 

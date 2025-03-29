@@ -150,7 +150,7 @@ black modules_or_packages
 
 Visual Studio Code, disponible en \url{https://code.visualstudio.com/}, es un editor de código fuente de código abierto que soporta múltiples lenguajes de programación. Destaca por su flexibilidad y capacidad de personalización. Permite integrar extensiones que amplían sus funcionalidades. Entre sus características se encuentran el soporte para depuración integrada, control de versiones con Git y herramientas de autocompletado. También ofrece una interfaz de usuario intuitiva y un sistema de gestión de proyectos eficiente. VSCode es compatible con Windows, macOS y GNU/Linux.
 
-Existen múltiples extensiones disponibles para Python. Entre las más destacadas se encuentran el plugin \texttt{Python}, que proporciona soporte para depuración, ejecución de código, y autocompletado de código Python, y \texttt{Pylance}, que ofrece características adicionales como análisis estático de código y autocompletado inteligente.
+Existen múltiples extensiones disponibles para Python. Entre las más destacadas se encuentran el \textit{plugin} \texttt{Python}, que proporciona soporte para depuración, ejecución de código, y autocompletado de código Python, y \texttt{Pylance}, que ofrece características adicionales como análisis estático de código y autocompletado inteligente.
 
 La extensión Remote - SSH de Visual Studio Code permite utilizar cualquier máquina remota con un servidor SSH como entorno de desarrollo. Esto facilita el desarrollo y la resolución de problemas en una amplia variedad de situaciones. Mediante esta extensión, es posible desarrollar en el mismo sistema operativo al que se desplegará el software o emplear hardware más grande, rápido o especializado que el de la máquina local.
 
@@ -158,23 +158,42 @@ Una de las ventajas de esta extensión es la capacidad de cambiar rápidamente e
 
 Esta extensión resulta útil también para depurar aplicaciones que se ejecutan en otros lugares. No es necesario tener el código fuente en la máquina local para aprovechar estas ventajas, ya que la extensión ejecuta comandos y otras extensiones directamente en la máquina remota. Es posible abrir cualquier carpeta en la máquina remota y trabajar con ella de la misma forma que si estuviera en la máquina local.
 
+\subsubsection{Pytest}
+
+Pytest \citep{pytest} es un marco de pruebas o \textit{framework} para Python que facilita la creación, ejecución y gestión de pruebas automatizadas. Su diseño simple y flexible lo convierte en una herramienta popular tanto para desarrolladores novatos como para expertos. A través de una sintaxis intuitiva, pytest permite escribir pruebas concisas y efectivas, y ofrece potentes herramientas para la depuración de errores, la introspección de aserciones y la ejecución de pruebas en múltiples configuraciones. Es utilizado principalmente para pruebas unitarias, aunque también puede aplicarse a pruebas de integración y funcionales. pytest sigue un enfoque basado en convenciones, lo que significa que por defecto, descubre y ejecuta las pruebas sin necesidad de una configuración extensa.
+
+Entre las características más destacadas de pytest se incluyen su sistema de \textit{fixtures}, que permite preparar datos y recursos reutilizables para las pruebas, y su potente mecanismo de aserciones, que ofrece introspección detallada de los errores durante los fallos de prueba. Además, pytest soporta pruebas parametrizadas, la ejecución de pruebas en paralelo mediante \textit{plugins}, y una fácil integración con herramientas de cobertura de código y análisis estático. Los resultados de las pruebas se presentan de forma clara y legible, y permiten que los desarrolladores comprendan rápidamente los problemas detectados. También es compatible con otras bibliotecas de pruebas como \texttt{unittest} y \texttt{nose}, lo que facilita la transición entre diferentes marcos de pruebas.
+
+En cuanto a los requerimientos, pytest necesita Python 3.8 o superior para su funcionamiento, y puede instalarse fácilmente utilizando el administrador de paquetes \texttt{pip}. Para instalarlo, basta con ejecutar el siguiente comando: 
+\begin{lstlisting}[language=bash]
+pip install -U pytest
+\end{lstlisting}
+
+Una vez instalado, pytest se ejecuta desde la línea de comandos con el comando \texttt{pytest}, lo que hará que busque y ejecute todas las pruebas definidas en los archivos que sigan la convención de nombres \texttt{test\_*.py} o \texttt{*\_test.py}. Además, \texttt{pytest} permite la configuración avanzada mediante archivos de configuración y opciones de línea de comandos, lo que otorga una gran flexibilidad en proyectos de gran escala. La documentación oficial está disponible en \citep{pytest_documentation}.
+
 \clearpage
-\section{PLACA DE AUDIO BEHRINGER UMC204HD}
+\section{INTERFAZ DE AUDIO BEHRINGER UMC204HD}
 
-La Behringer UMC204HD es una interfaz de audio de alta calidad diseñada para la captura y procesamiento de señales de audio. Esta interfaz es compatible con sistemas operativos modernos Windows y GNU/Linux y se conecta a través de un puerto USB 2.0. Su capacidad para trabajar con alta resolución vertical y elevadas tasas de muestreo la convierte en una herramienta útil para una variedad de aplicaciones profesionales en el ámbito del análisis de señales. En la figura \ref{fig:placa} se puede apreciar una vista frontal y trasera de la interfaz de audio UMC204HD.
-
-La Behringer UMC204HD ofrece una resolución vertical de 24 bits, lo que permite una captura precisa y detallada de las señales de entrada. Esta alta resolución es esencial para la adquisición de datos en aplicaciones que requieren una representación fiel de las variaciones más pequeñas en la señal, como es el caso de señales adquiridas con hidrófonos.
-
-La interfaz tiene una tasa de muestreo de hasta 192 kHz, lo que le permite capturar señales con una adecuada resolución temporal. Esta alta tasa de muestreo es crucial para evitar el fonómeno de \textit{aliasing} y para asegurar que las señales con contenido espectral en altas frecuencias, como las señales provenientes de los hidrófonos, se capturen adecuadamente.  Asimismo, la interface UMC204HD se caracteriza por tener bajo nivel de ruido propio. 
+La Behringer UMC204HD es una interfaz de audio USB que ofrece una conversión de señal precisa y confiable, \citep{behringerUMC204HD}. Se utiliza en la grabación y reproducción de señales de audio analógicas y digitales. Es adecuada para la adquisición de señales de hidrófonos en aplicaciones científicas como EAMMRA. En la figura \ref{fig:behringer} se puede observar una vista frontal y trasera de la interfaz.
 
 \vspace{10px}
 \begin{figure}[ht]
     \centering
     \includegraphics[width=.5\textwidth]{graficos/behringer.png}
     \caption[]{Vista frontal y trasera de la interface de audio Behringer UMC204HD.}
-    \label{fig:placa}
+    \label{fig:behringer}
 \end{figure}
 
+La UMC204HD tiene dos entradas XLR/TRS combo para micrófonos o instrumentos. También cuenta con dos salidas balanceadas TRS 1/4” para una señal limpia. La interfaz soporta dos canales de entrada y salida simultáneos. Cada canal tiene control de ganancia independiente. Incluye salidas de auriculares con control de volumen y un monitor de mezcla directa para la monitorización sin latencia.
+
+La interfaz tiene una resolución de 24 bits y soporta hasta 192 kHz. La relación señal/ruido supera los 100 dB, lo que reduce el ruido en la señal. Estos valores permiten una captura precisa de señales, como las de hidrófonos. La interfaz es compatible con varias plataformas de software, lo que la hace versátil.
+
+Con Python y PyAudio, se puede controlar la interfaz para la adquisición de datos en tiempo real. PyAudio permite configurar la tasa de muestreo, los canales y otros parámetros. Esto facilita la integración de la interfaz en sistemas de adquisición y análisis de señales.
+
+
+
+
+	
 \clearpage
 \section{DISEÑO E IMPLEMENTACIÓN }
 

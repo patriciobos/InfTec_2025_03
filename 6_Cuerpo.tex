@@ -378,7 +378,88 @@ En el constructor se inicializan los siguientes atributos:
 \clearpage
 \section{PRUEBAS Y ENSAYOS}
 
+Para validar el correcto funcionamiento del módulo \texttt{BehringerHandler}, se desarrolló una batería de pruebas unitarias y funcionales empleando los marcos de prueba \texttt{unittest} y \texttt{pytest}, junto con técnicas de \textit{mocking} a través de \texttt{unittest.mock}. El objetivo principal de los ensayos fue asegurar la correcta inicialización del dispositivo, la grabación de audio, el manejo de errores y la robustez del sistema ante condiciones adversas.
+
+El framework \texttt{unittest} forma parte de la biblioteca estándar de Python. Este framework sigue el modelo xUnit, ampliamente adoptado en distintos lenguajes de programación. Las pruebas se organizan en clases que heredan de \texttt{unittest.TestCase}. Cada método representa un caso de prueba individual. El framework proporciona métodos de aserción para validar el comportamiento del código bajo prueba. También permite configurar y limpiar el entorno de prueba mediante los métodos \texttt{setUp()} y \texttt{tearDown()}. En este proyecto, \texttt{unittest} sirvió como base para estructurar los casos que evalúan la inicialización del dispositivo, la grabación de audio, el manejo de errores y los mecanismos de cierre.
+
+El framework \texttt{pytest} es una herramienta externa que amplía las capacidades de prueba en Python. Su sintaxis es más concisa y flexible que la de \texttt{unittest}. Las pruebas se pueden definir como funciones independientes, sin necesidad de clases. \texttt{pytest} también ofrece mecanismos potentes como las \textit{fixtures}, la captura de logs con \texttt{caplog} y una integración natural con \texttt{assert}. En este proyecto, \texttt{pytest} se utilizó para verificar el sistema de logging, simular errores y complementar los ensayos definidos con \texttt{unittest}.
+
+Ambos frameworks resultan compatibles y pueden coexistir dentro del mismo entorno de pruebas. \texttt{unittest} aportó una estructura clásica y controlada para los casos más detallados. Por su parte, \texttt{pytest} ofreció herramientas modernas que facilitaron la validación de condiciones específicas, como el registro de advertencias y errores.
+
+En el contexto de pruebas de software, un \textit{mock} es un objeto simulado. Este objeto reemplaza a una dependencia real y permite controlar su comportamiento durante los ensayos. El uso de \textit{mocks} facilita el aislamiento del componente que se desea evaluar. También permite verificar respuestas específicas ante distintos estímulos. En los ensayos del módulo \texttt{BehringerHandler}, se reemplazaron objetos como \texttt{pyaudio.PyAudio}, \texttt{wave.open}, \texttt{datetime.datetime} y \texttt{time.time}. Esta técnica hizo posible simular la presencia de dispositivos de audio. También permitió interceptar la creación de archivos sin escribir en el disco. Además, facilitó la generación de marcas de tiempo controladas y la simulación de condiciones temporales específicas. Gracias a este enfoque, se pudieron reproducir distintos escenarios. Por ejemplo, se evaluaron fallas de inicialización, errores de grabación y ausencia de datos en la cola, sin necesidad de depender de hardware real.
+
+En los ensayos del módulo \texttt{BehringerHandler}, se utilizó una \textit{fixture} para reiniciar los manejadores del sistema de logging antes de cada prueba.  Una \textit{fixture} es una función o recurso que prepara el entorno antes de ejecutar una prueba. También puede encargarse de restaurar el estado original una vez finalizada la ejecución. En el marco de \texttt{pytest}, las \textit{fixtures} permiten definir comportamientos repetitivos de forma declarativa y reutilizable.  Esta estrategia evitó interferencias entre casos de prueba consecutivos. También permitió verificar con precisión los mensajes generados por el sistema, en combinación con la herramienta \texttt{caplog}.
+
+\subsection{Cobertura de pruebas}
+
+Las pruebas se estructuraron para cubrir los siguientes aspectos del módulo:
+
+\begin{itemize} \item Inicialización del dispositivo de audio Behringer. \item Manejo de errores cuando el dispositivo no está disponible o es inválido. \item Grabación de audio y generación del archivo de salida en formato \texttt{.wav}. \item Validación del flujo de ejecución en presencia o ausencia de datos en la cola de audio. \item Verificación del correcto registro de mensajes en el sistema de logging. \item Evaluación del comportamiento de los métodos auxiliares, como \texttt{open()}, \texttt{close()} y \texttt{deinit()}. \end{itemize}
+
+\subsection{Estrategia de prueba}
+
+Se utilizaron técnicas de simulación (\textit{mocking}) para reemplazar el comportamiento del hardware de audio y del sistema de archivos, permitiendo un entorno controlado para la validación lógica del código. Particularmente, se realizaron los siguientes reemplazos:
+
+\begin{itemize} \item \texttt{pyaudio.PyAudio}: Simulado para emular la presencia (o ausencia) del dispositivo Behringer. \item \texttt{wave.open}: Interceptado para evitar la creación real de archivos de audio. \item \texttt{datetime.datetime.now()}: Reemplazado para asegurar consistencia en los nombres de archivo generados. \item \texttt{time.time()}: Controlado para validar condiciones temporales durante la grabación. \end{itemize}
+
+La ejecución de los ensayos se realiza desde la línea de comandos. Para ello, se utiliza el ejecutable de \texttt{pytest}, que detecta automáticamente todos los archivos de prueba cuyo nombre comienza con \texttt{test\_} o termina en \texttt{\_test.py}. El comando que se utiliza en el módulo \texttt{BehringerHandler} para lanzar todas las pruebas, que incluyen tanto las escrdefinidas para elitas con \texttt{unittest} como las específicas de \texttt{pytest}, es:
+
+\begin{lstlisting}[language={python}]
+pytest tests/modules/behringer/test_behringer_handler.py -v 
+\end{lstlisting}
+
+
+
+El modificador \texttt{-v} activa el modo detallado (\textit{verbose}), que muestra el nombre de cada prueba y su resultado. La salida por consola incluye también los logs generados durante la ejecución, lo que permite verificar que los mensajes esperados fueron correctamente emitidos.
+
+\subsection{Casos de prueba destacados}
+
+\begin{itemize} \item \textbf{Inicialización exitosa}: Se verifica que el dispositivo Behringer es detectado y que se almacena correctamente el índice del dispositivo. \item \textbf{Inicialización fallida}: Se simula la ausencia de dispositivos y se valida que el índice del dispositivo permanece \texttt{None}. \item \textbf{Grabación de audio}: Se simula una sesión de grabación, incluyendo escritura de datos en la cola, y se verifica la creación lógica del archivo de salida. \item \textbf{Manejo de cola vacía}: Se evalúa la robustez del sistema ante la ausencia de datos durante la grabación (control de excepciones por \texttt{queue.Empty}). \item \textbf{Log de advertencias}: Se valida que se emiten advertencias apropiadas cuando se intenta abrir o grabar sin haber inicializado el sistema. \item \textbf{Callback del flujo de audio}: Se prueba el comportamiento del método de \texttt{callback} tanto en estado de grabación como en reposo. \item \textbf{Cierre con errores}: Se simula una excepción al intentar cerrar un flujo de audio defectuoso y se verifica que se registre el error correspondiente. \end{itemize}
+
+\subsection{Integración con Pytest}
+
+Además de los tests basados en \texttt{unittest}, se incorporaron pruebas con \texttt{pytest} utilizando \texttt{fixtures} para configurar adecuadamente los manejadores de logging. Se utilizó \texttt{caplog} para capturar mensajes de log y confirmar que los errores y advertencias se registran correctamente.
+
+\section{RESULTADOS}
+
+Todas las pruebas fueron ejecutadas de forma automatizada y arrojaron resultados satisfactorios. No se detectaron fallos ni excepciones no controladas. El módulo demostró comportarse de forma robusta frente a condiciones esperadas y adversas, lo cual valida su uso en entornos complejos de adquisición de señales de audio para aplicaciones tanto de laboratorio como de campo.
+
+En la figura \ref{fig:testUni} se pueden observar los resultados obtenidos al ejecutar veinte pruebas unitarias al código.  Se puede apreciar que todas las pruebas fueron exitosas. 
+
+\begin{figure}[htpb]
+    \centering
+    \includegraphics[width=\textwidth]{graficos/unittest.png}
+    \caption{Resultados de test unitarios al código.}
+    \label{fig:testUni}
+\end{figure}
+
+Un test de cobertura permite medir qué proporción del código fuente es ejecutada durante la realización de las pruebas. Esta métrica es útil para identificar partes del código que no fueron evaluadas y, por lo tanto, podrían contener errores no detectados. Para calcular la cobertura en este proyecto, se utilizó el plugin \texttt{pytest-cov}, que extiende \texttt{pytest} con opciones específicas. La cobertura se aplicó al módulo \texttt{behringer\_handler.py} y se ejecutó con el siguiente comando:
+
+\begin{lstlisting}[language=bash] 
+pytest --cov=modules.behringer.behringer_handler modules/behringer/tests/
+ --cov-report=term-missing -v 
+\end{lstlisting}
+
+La salida del análisis mostró una cobertura del 96\%. De un total de 129 líneas ejecutables, 5 no fueron alcanzadas por las pruebas. Las líneas omitidas se encuentran en las posiciones 49–50, 72–73 y 101 del archivo fuente. Esta información resulta valiosa para planificar nuevas pruebas que completen la validación del módulo.
+
+\begin{figure}[htpb]
+    \centering
+    \includegraphics[width=\textwidth]{graficos/coverage.png}
+    \caption{Ejecución de pruebas con medición de cobertura.}
+    \label{fig:testCov}
+\end{figure}
+
+
 \clearpage
 \section{CONCLUSIONES}
 
+El desarrollo del módulo \texttt{BehringerHandler} permitió incorporar una solución robusta y extensible para la configuración y el control de la interfaz de audio Behringer UMC204HD en el sistema EAMMRA. Su diseño modular y su implementación en Python favorecen la integración con otros componentes del sistema y facilitan el mantenimiento y la evolución futura del software.
+
+Durante el proceso de desarrollo, se aplicaron buenas prácticas de codificación basadas en las guías PEP-8 y PEP-257. Se emplearon herramientas de análisis estático como Flake8, Pylint y Black, que contribuyeron a mejorar la legibilidad, la coherencia y la calidad general del código. Estas herramientas resultaron fundamentales para reducir defectos y facilitar el trabajo colaborativo en el proyecto.
+
+La validación funcional del módulo se realizó mediante una batería de pruebas automatizadas. Se utilizaron los marcos \texttt{unittest} y \texttt{pytest}, junto con técnicas de \textit{mocking} y \textit{fixtures}, que permitieron verificar el comportamiento del sistema bajo distintas condiciones, sin necesidad de depender del hardware real. Las pruebas contemplaron tanto situaciones normales como escenarios de falla y manejo de errores.
+
+Los resultados de las pruebas indicaron un funcionamiento correcto y estable del módulo. No se detectaron errores durante la ejecución, y la cobertura alcanzó el 96\% de las líneas ejecutables. Este nivel de cobertura refleja un alto grado de confianza en el comportamiento del módulo ante condiciones esperadas y adversas.
+
+Como línea futura de trabajo, se propone implementar pruebas de integración en conjunto con otros módulos del sistema EAMMRA, así como ensayos funcionales en condiciones reales de operación. También se sugiere completar la cobertura restante, documentar formalmente la API del módulo, y evaluar mecanismos de tolerancia a fallos para mejorar su desempeño en entornos hostiles o de difícil acceso.
 %

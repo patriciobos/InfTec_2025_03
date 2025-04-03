@@ -1,27 +1,21 @@
 \begin{center}
-	\large{\textbf{\textcolor{black}{Rutinas de configuración y adquisición para placa de audio Behringer.}}}\\
+	\large{\textbf{\textcolor{black}{Rutinas de configuración y adquisición para interfaz de audio Behringer.}}}\\
 	\vspace{1pc}
 	\textbf{Patricio Bos}
 \end{center}
-
 \bigskip
-	\begin{center}
-		\textcolor{black}{RESUMEN}	
-	\end{center}
-	\begin*
-		\indent
-		\textit{El presente informe técnico documenta el diseño e implementación de un módulo de software para configurar y controlar una placa de audio Behringer UMC204HD. Este instrumento forma parte del equipamiento de la Estación Autónoma Marítima para el Monitoreo de Ruido Ambiente (EAMMRA), desarrollado por la División Acústica Submarina de la Dirección de Investigación de la Armada (DIIV). El software desarrollado permite la adquisición y registro de señales acústicas analógicas provenientes de hidrófonos de manera automática o manual.
-Este trabajo es parte del Proyecto ``Monitoreo acústico de niveles de ruido submarino y telemetría satelital para detección de eventos acústicos intensos en aguas de la Plataforma Continental Argentina'', del programa PIDDEF del Ministerio de Defensa, vinculado al Proyecto ``Localización e identificación de fuentes de ruido'' de la Armada Argentina, llevado a cabo en la División Acústica Submarina de la Dirección de Investigación de la Armada (DIIV) y la Unidad Ejecutora de Investigación y Desarrollo Estratégicos para la Defensa (UNIDEF), dependiente de CONICET/MinDef.}
-	\end*
-
+\begin{center}
+    \textcolor{black}{RESUMEN}	
+\end{center}
+\begin*
+    \indent
+    \textit{Se presenta el desarrollo de un módulo en Python para configurar y controlar la interfaz de audio Behringer UMC204HD, utilizada en la estación autónoma EAMMRA. El módulo permite la adquisición programática de señales de hidrófonos y fue validado con pruebas automatizadas mediante \texttt{unittest} y \texttt{pytest}. Se alcanzó una cobertura del 96\% sin fallos reportados, confirmando su robustez para aplicaciones de monitoreo acústico en laboratorio y campo.}
+\end*
 \bigskip
-	\begin{center}
-		\textcolor{black}{ABSTRACT}
-	\end{center}
-	\begin*
-		\indent
-		\textit{This technical report documents the design and implementation of a software module to configure and control a Behringer UMC204HD audio interface. This instrument is part of the equipment of the Autonomous Maritime Station for Ambient Noise Monitoring (EAMMRA), developed by the Submarine Acoustics Division of the Navy Research Directorate (DIIV). The developed software allows for the automatic or manual acquisition and recording of analog acoustic signals from hydrophones.
-This work is part of the Project ``Acoustic monitoring of underwater noise levels and satellite telemetry for detecting intense acoustic events in waters of the Argentine Continental Shelf'', from the PIDDEF program of the Ministry of Defense, linked to the Project ``Localization and identification of noise sources'' of the Argentine Navy, carried out in the Underwater Sound Division of the Argentinian Navy Research Office (DIIV) and the Strategic Research and Development Unit for Defense (UNIDEF), dependent on CONICET/MinDef.} 
-	\end*
-
-\clearpage
+\begin{center}
+    \textcolor{black}{ABSTRACT}
+\end{center}
+\begin*
+    \indent
+    \textit{A Python module for configuring and controlling the Behringer UMC204HD audio interface, used in the autonomous EAMMRA station, is presented. The module enables programmatic acquisition of hydrophone signals and was validated through automated testing using \texttt{unittest} and \texttt{pytest}. A 96\% test coverage was achieved with no reported failures, confirming its robustness for acoustic monitoring in both lab and field environments.}
+\end*
